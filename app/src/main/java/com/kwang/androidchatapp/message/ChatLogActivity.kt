@@ -3,27 +3,104 @@ package com.kwang.androidchatapp.message
 import android.content.Context
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
-import android.os.Message
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.ChildEventListener
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
 import com.kwang.androidchatapp.R
-import com.kwang.androidchatapp.classes.MessageLog
+import com.kwang.androidchatapp.classes.ChatMessageLog
 import com.kwang.androidchatapp.classes.User
+import kotlinx.android.synthetic.main.activity_chat_log.*
 import java.util.ArrayList
 
 class ChatLogActivity : AppCompatActivity() {
+
+
+    val message = ArrayList<ChatMessageLog>()
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_chat_log)
 
-        val username = intent.getStringExtra(NewMessageActivity.USER_KEY)
-        supportActionBar?.title = username
+        val user = intent.getParcelableExtra<User>(NewMessageActivity.USER_KEY)
+        supportActionBar?.title = user.username
 
+        setupDummyData()
+        listenForMessagees()
+
+        send_button_chat_log.setOnClickListener {
+            Log.d("ChatLog","Attempt to send message...")
+            performSendMessage()
+        }
+    }
+
+    private fun listenForMessagees() {
+        val ref = FirebaseDatabase.getInstance().getReference("/messages")
+
+        ref.addChildEventListener(object : ChildEventListener {
+            override fun onCancelled(p0: DatabaseError) {
+
+            }
+
+            override fun onChildMoved(p0: DataSnapshot, p1: String?) {
+
+            }
+
+            override fun onChildChanged(p0: DataSnapshot, p1: String?) {
+
+            }
+
+            override fun onChildAdded(p0: DataSnapshot, p1: String?) {
+                val chatMessage = p0.getValue(ChatMessageLog::class.java)
+                val RecyclerView = findViewById(R.id.recyclerview_chat_log) as RecyclerView
+                val layoutManager = LinearLayoutManager(applicationContext, LinearLayoutManager.VERTICAL, false)
+
+
+                if(chatMessage!=null) {
+                    Log.d("ChatLog", chatMessage?.text)
+                    message.add(chatMessage)
+                }
+
+                RecyclerView.adapter = VerticalAdapter(message,this@ChatLogActivity)
+                RecyclerView.layoutManager = layoutManager
+            }
+
+            override fun onChildRemoved(p0: DataSnapshot) {
+
+
+            }
+        })
+    }
+
+
+    private fun performSendMessage() {
+        // 파이어베이스에서 메세지보내는 함수
+        val fromId = FirebaseAuth.getInstance().uid
+        val text = chat_log_editext.text.toString()
+        val user = intent.getParcelableExtra<User>(NewMessageActivity.USER_KEY)
+        val toId = user.uid
+
+        if (fromId == null) return
+
+        val ref = FirebaseDatabase.getInstance().getReference("/messages").push()
+
+        val chatMessage = ChatMessageLog(ref.key!!,text, fromId!!, toId,System.currentTimeMillis() / 1000)
+        ref.setValue(chatMessage).addOnSuccessListener {
+            Log.d("ChatLog","Saved our chat messagee: ${ref.key}")
+        }
+    }
+
+    private fun setupDummyData(){
+        /*
         var RecyclerView = findViewById(R.id.recyclerview_chat_log) as RecyclerView
         var layoutManager = LinearLayoutManager(applicationContext, LinearLayoutManager.VERTICAL, false)
 
@@ -34,13 +111,13 @@ class ChatLogActivity : AppCompatActivity() {
         message.add(MessageLog("메세지를 입력해주세요","2"))
 
         RecyclerView.adapter = VerticalAdapter(message,this@ChatLogActivity)
-        RecyclerView.layoutManager = layoutManager
-
+        RecyclerView.layoutManager = layoutManager*/
     }
-    class VerticalAdapter(data: ArrayList<MessageLog>, context: Context) : RecyclerView.Adapter<VerticalAdapter.MyViewHolder>() {
+
+    class VerticalAdapter(data: ArrayList<ChatMessageLog>, context: Context) : RecyclerView.Adapter<VerticalAdapter.MyViewHolder>() {
         private val TO = 1
         private val FROM = 2
-        internal var data = ArrayList<MessageLog>()
+        internal var data = ArrayList<ChatMessageLog>()
         internal var context: Context
 
         init {
@@ -59,7 +136,7 @@ class ChatLogActivity : AppCompatActivity() {
         }
 
         override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
-                holder.fromMessage.text = data[position].message
+                holder.fromMessage.text = data[position].text
         }
 
         override fun getItemCount(): Int {
@@ -67,8 +144,9 @@ class ChatLogActivity : AppCompatActivity() {
         }
 
         override fun getItemViewType(position: Int): Int {
-            if (data[position].flag == "1") return TO
-            else return FROM
+            val fromId = FirebaseAuth.getInstance().uid
+            if (data[position].fromId == fromId) return FROM
+            else return TO
         }
 
 

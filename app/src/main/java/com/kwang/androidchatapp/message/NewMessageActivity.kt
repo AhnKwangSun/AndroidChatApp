@@ -100,7 +100,7 @@ class NewMessageActivity : AppCompatActivity() {
                 email = itemView.findViewById(R.id.email) as TextView
                 itemView.setOnClickListener {
                     var intent = Intent(context,ChatLogActivity::class.java)
-                    intent.putExtra(USER_KEY,name.text)
+                    intent.putExtra(USER_KEY,data[adapterPosition])
                     context.startActivity(intent)
                 }
             }
