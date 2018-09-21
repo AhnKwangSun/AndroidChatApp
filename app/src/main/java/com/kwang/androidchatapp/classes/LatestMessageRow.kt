@@ -21,7 +21,7 @@ import java.util.ArrayList
 class LatestMessageRow(data: ArrayList<ChatMessageLog>, context: Context) : RecyclerView.Adapter<LatestMessageRow.MyViewHolder>() {
     internal var data = ArrayList<ChatMessageLog>()
     internal var context: Context
-    var chatPartnerUser:User? = null
+    var chatPartnerUser = ArrayList<User>()
 
     init {
         this.data = data
@@ -45,8 +45,8 @@ class LatestMessageRow(data: ArrayList<ChatMessageLog>, context: Context) : Recy
         val ref = FirebaseDatabase.getInstance().getReference("/users/$chatPartnerId")
         ref.addListenerForSingleValueEvent(object : ValueEventListener{
             override fun onDataChange(p0: DataSnapshot) {
-                chatPartnerUser = p0.getValue(User::class.java)
-                holder.name.text = chatPartnerUser?.username
+                chatPartnerUser.add(p0.getValue(User::class.java)!!)
+                holder.name.text = chatPartnerUser[position].username
                 holder.message.text = data[position].text
             }
             override fun onCancelled(p0: DatabaseError) {
@@ -71,7 +71,7 @@ class LatestMessageRow(data: ArrayList<ChatMessageLog>, context: Context) : Recy
             message = itemView.findViewById(R.id.latest_Message) as TextView
             itemView.setOnClickListener {
                 var intent = Intent(context,ChatLogActivity::class.java)
-                intent.putExtra(NewMessageActivity.USER_KEY, this@LatestMessageRow.chatPartnerUser)
+                intent.putExtra(NewMessageActivity.USER_KEY, this@LatestMessageRow.chatPartnerUser[adapterPosition])
                 context.startActivity(intent)
             }
         }
