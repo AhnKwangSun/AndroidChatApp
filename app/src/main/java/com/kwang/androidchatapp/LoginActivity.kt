@@ -34,7 +34,7 @@ class LoginActivity: AppCompatActivity(){
         }
 
         not_already_account.setOnClickListener {
-            val intent = Intent(this, MainActivity::class.java)
+            val intent = Intent(this, RegisterActivity::class.java)
             intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY)
             startActivity(intent)
         }

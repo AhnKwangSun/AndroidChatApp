@@ -6,9 +6,11 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
+import com.kwang.androidchatapp.classes.User
 import kotlinx.android.synthetic.main.activity_main.*
 
-class MainActivity : AppCompatActivity() {
+class RegisterActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,11 +45,27 @@ class MainActivity : AppCompatActivity() {
                     if(!it.isSuccessful) return@addOnCompleteListener
 
                     // else if successful
-                    Log.d("Main","Successfully created user with uid: ${it.result.user.uid}")
+                    Log.d("RegisterActivity","Successfully created user with uid: ${it.result.user.uid}")
+
+                    saveUsertoFirebaseDatabase()
                 }
                 .addOnFailureListener {
-                    Log.d("Main","Failed to create user: ${it.message}")
+                    Log.d("RegisterActivity","Failed to create user: ${it.message}")
                     Toast.makeText(this, "Email 형식이 맞지 않습니다.", Toast.LENGTH_LONG).show()
                 }
     }
+
+    private fun saveUsertoFirebaseDatabase() {
+        val uid = FirebaseAuth.getInstance().uid ?: ""
+        val ref = FirebaseDatabase.getInstance().getReference("/users/$uid")
+
+        val user = User(uid, name_register.text.toString(), email_register.text.toString())
+
+        ref.setValue(user).addOnSuccessListener {
+            Log.d("RegisterActivity", "파이어베이스 데이터베이스 저장 완료")
+        }
+
+
+    }
+
 }
