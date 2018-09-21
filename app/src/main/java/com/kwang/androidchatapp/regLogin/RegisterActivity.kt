@@ -9,6 +9,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 import com.kwang.androidchatapp.R
 import com.kwang.androidchatapp.classes.User
+import com.kwang.androidchatapp.message.LatestMessagesActivity
 import kotlinx.android.synthetic.main.activity_main.*
 
 class RegisterActivity : AppCompatActivity() {
@@ -49,10 +50,24 @@ class RegisterActivity : AppCompatActivity() {
                     Log.d("RegisterActivity","Successfully created user with uid: ${it.result.user.uid}")
 
                     saveUsertoFirebaseDatabase()
+
+                    FirebaseAuth.getInstance().signInWithEmailAndPassword(email,password)
+                            .addOnCompleteListener {
+                                if(!it.isSuccessful) return@addOnCompleteListener
+
+                                Log.d("Main","Successfully created user with uid: ${it.result.user.uid}")
+                                val intent = Intent(this, LatestMessagesActivity::class.java)
+                                intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK.or(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                startActivity(intent)
+
+                            }
+                            .addOnFailureListener {
+                                Log.d("Main","Failed to create user: ${it.message}")
+                            }
                 }
                 .addOnFailureListener {
                     Log.d("RegisterActivity","Failed to create user: ${it.message}")
-                    Toast.makeText(this, "Email 형식이 맞지 않습니다.", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this, "Email이 중복됩니다.", Toast.LENGTH_LONG).show()
                 }
     }
 

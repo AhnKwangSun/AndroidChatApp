@@ -25,7 +25,8 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="10dp"
             android:ems="10"
-            android:hint="패스워드" />
+            android:hint="패스워드"
+            android:inputType="textPassword" />
 
         <Button
             android:id="@+id/login_button"
