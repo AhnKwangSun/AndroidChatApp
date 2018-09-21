@@ -1,4 +1,4 @@
-package com.kwang.androidchatapp
+package com.kwang.androidchatapp.regLogin
 
 import android.content.Intent
 import android.support.v7.app.AppCompatActivity
@@ -7,6 +7,7 @@ import android.util.Log
 import android.widget.Toast
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
+import com.kwang.androidchatapp.R
 import com.kwang.androidchatapp.classes.User
 import kotlinx.android.synthetic.main.activity_main.*
 

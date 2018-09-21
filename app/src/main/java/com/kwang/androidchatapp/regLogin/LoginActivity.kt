@@ -1,4 +1,4 @@
-package com.kwang.androidchatapp
+package com.kwang.androidchatapp.regLogin
 
 import android.content.Intent
 import android.os.Bundle
@@ -6,6 +6,8 @@ import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.widget.Toast
 import com.google.firebase.auth.FirebaseAuth
+import com.kwang.androidchatapp.R
+import com.kwang.androidchatapp.message.LatestMessagesActivity
 import kotlinx.android.synthetic.main.activity_login.*
 
 class LoginActivity: AppCompatActivity(){

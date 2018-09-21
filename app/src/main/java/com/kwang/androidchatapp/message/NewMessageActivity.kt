@@ -1,20 +1,25 @@
-package com.kwang.androidchatapp
+package com.kwang.androidchatapp.message
 
+import android.content.Context
+import android.content.Intent
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.support.v4.content.ContextCompat.startActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import com.kwang.androidchatapp.R
 import com.kwang.androidchatapp.classes.User
+import com.xwray.groupie.GroupAdapter
 import java.util.ArrayList
 
 class NewMessageActivity : AppCompatActivity() {
@@ -43,7 +48,7 @@ class NewMessageActivity : AppCompatActivity() {
                         singleVerticals.add(user)
                     }
                 }
-                RecyclerView.adapter = VerticalAdapter(singleVerticals)
+                RecyclerView.adapter = VerticalAdapter(singleVerticals,this@NewMessageActivity)
                 RecyclerView.layoutManager = layoutManager
             }
             override fun onCancelled(p0: DatabaseError) {
@@ -55,11 +60,18 @@ class NewMessageActivity : AppCompatActivity() {
         )
     }
 
-    class VerticalAdapter(data: ArrayList<User>) : RecyclerView.Adapter<VerticalAdapter.MyViewHolder>() {
+    companion object {
+        val USER_KEY = "UESR_KEY"
+    }
+
+
+    class VerticalAdapter(data: ArrayList<User>, context: Context) : RecyclerView.Adapter<VerticalAdapter.MyViewHolder>() {
         internal var data = ArrayList<User>()
+        internal var context:Context
 
         init {
             this.data = data
+            this.context = context
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyViewHolder {
@@ -86,6 +98,11 @@ class NewMessageActivity : AppCompatActivity() {
                 //image = itemView.findViewById<View>(R.id.image) as ImageView
                 name = itemView.findViewById(R.id.name) as TextView
                 email = itemView.findViewById(R.id.email) as TextView
+                itemView.setOnClickListener {
+                    var intent = Intent(context,ChatLogActivity::class.java)
+                    intent.putExtra(USER_KEY,name.text)
+                    context.startActivity(intent)
+                }
             }
         }
     }
