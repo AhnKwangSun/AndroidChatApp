@@ -14,23 +14,7 @@ class LoginActivity: AppCompatActivity(){
         setContentView(R.layout.activity_login)
 
         login_button.setOnClickListener {
-            val email = email_login.text.toString()
-            val password = password_login.text.toString()
-
-            if (email.isEmpty() || password.isEmpty()) {
-                Toast.makeText(this, "Email 또는 Password를 입력해주세요.", Toast.LENGTH_LONG).show()
-                return@setOnClickListener
-            }
-
-            FirebaseAuth.getInstance().signInWithEmailAndPassword(email,password)
-                    .addOnCompleteListener {
-                        if(!it.isSuccessful) return@addOnCompleteListener
-
-                        Log.d("Main","Successfully created user with uid: ${it.result.user.uid}")
-                    }
-                    .addOnFailureListener {
-                        Log.d("Main","Failed to create user: ${it.message}")
-                    }
+            performLogin()
         }
 
         not_already_account.setOnClickListener {
@@ -38,5 +22,29 @@ class LoginActivity: AppCompatActivity(){
             intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY)
             startActivity(intent)
         }
+    }
+
+    private fun performLogin() {
+        val email = email_login.text.toString()
+        val password = password_login.text.toString()
+
+        if (email.isEmpty() || password.isEmpty()) {
+            Toast.makeText(this, "Email 또는 Password를 입력해주세요.", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        FirebaseAuth.getInstance().signInWithEmailAndPassword(email,password)
+                .addOnCompleteListener {
+                    if(!it.isSuccessful) return@addOnCompleteListener
+
+                    Log.d("Main","Successfully created user with uid: ${it.result.user.uid}")
+                    val intent = Intent(this, LatestMessagesActivity::class.java)
+                    intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK.or(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    startActivity(intent)
+
+                }
+                .addOnFailureListener {
+                    Log.d("Main","Failed to create user: ${it.message}")
+                }
     }
 }
