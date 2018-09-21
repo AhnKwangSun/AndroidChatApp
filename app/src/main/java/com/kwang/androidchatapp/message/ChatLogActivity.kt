@@ -25,26 +25,29 @@ class ChatLogActivity : AppCompatActivity() {
 
 
     val message = ArrayList<ChatMessageLog>()
-
+    var toUser: User? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_chat_log)
 
-        val user = intent.getParcelableExtra<User>(NewMessageActivity.USER_KEY)
-        supportActionBar?.title = user.username
+        toUser = intent.getParcelableExtra<User>(NewMessageActivity.USER_KEY)
+        supportActionBar?.title = toUser?.username
 
         setupDummyData()
         listenForMessagees()
 
         send_button_chat_log.setOnClickListener {
             Log.d("ChatLog","Attempt to send message...")
-            performSendMessage()
+            if(chat_log_editext.text.toString() == "") return@setOnClickListener
+            else performSendMessage()
         }
     }
 
     private fun listenForMessagees() {
-        val ref = FirebaseDatabase.getInstance().getReference("/messages")
+        val fromId = FirebaseAuth.getInstance().uid
+        val toId = toUser?.uid
+        val ref = FirebaseDatabase.getInstance().getReference("/user-messages/$fromId/$toId")
 
         ref.addChildEventListener(object : ChildEventListener {
             override fun onCancelled(p0: DatabaseError) {
@@ -72,6 +75,7 @@ class ChatLogActivity : AppCompatActivity() {
 
                 RecyclerView.adapter = VerticalAdapter(message,this@ChatLogActivity)
                 RecyclerView.layoutManager = layoutManager
+                recyclerview_chat_log.scrollToPosition(RecyclerView.adapter.itemCount-1)
             }
 
             override fun onChildRemoved(p0: DataSnapshot) {
@@ -80,7 +84,6 @@ class ChatLogActivity : AppCompatActivity() {
             }
         })
     }
-
 
     private fun performSendMessage() {
         // 파이어베이스에서 메세지보내는 함수
@@ -91,12 +94,16 @@ class ChatLogActivity : AppCompatActivity() {
 
         if (fromId == null) return
 
-        val ref = FirebaseDatabase.getInstance().getReference("/messages").push()
-
+        //val ref = FirebaseDatabase.getInstance().getReference("/messages").push()
+        val ref = FirebaseDatabase.getInstance().getReference("/user-messages/$fromId/$toId").push()
+        val toRef = FirebaseDatabase.getInstance().getReference("/user-messages/$toId/$fromId").push()
         val chatMessage = ChatMessageLog(ref.key!!,text, fromId!!, toId,System.currentTimeMillis() / 1000)
         ref.setValue(chatMessage).addOnSuccessListener {
             Log.d("ChatLog","Saved our chat messagee: ${ref.key}")
+            chat_log_editext.text.clear()
+            recyclerview_chat_log.scrollToPosition((findViewById(R.id.recyclerview_chat_log) as RecyclerView).adapter.itemCount-1)
         }
+        toRef.setValue(chatMessage)
     }
 
     private fun setupDummyData(){
@@ -142,6 +149,7 @@ class ChatLogActivity : AppCompatActivity() {
         override fun getItemCount(): Int {
             return data.size
         }
+
 
         override fun getItemViewType(position: Int): Int {
             val fromId = FirebaseAuth.getInstance().uid

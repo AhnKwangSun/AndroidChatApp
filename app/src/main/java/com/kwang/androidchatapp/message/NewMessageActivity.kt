@@ -13,6 +13,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.Toast
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
@@ -20,7 +21,7 @@ import com.google.firebase.database.ValueEventListener
 import com.kwang.androidchatapp.R
 import com.kwang.androidchatapp.classes.User
 import com.xwray.groupie.GroupAdapter
-import java.util.ArrayList
+import java.util.*
 
 class NewMessageActivity : AppCompatActivity() {
 
@@ -45,7 +46,11 @@ class NewMessageActivity : AppCompatActivity() {
                     Log.d("NewMessage",it.toString())
                     val user = it.getValue(User::class.java)
                     if(user != null){
-                        singleVerticals.add(user)
+                        if(user.uid == FirebaseAuth.getInstance().uid) {
+                            singleVerticals.add(User(user.uid, "나", user.userEmail))
+                            Collections.swap(singleVerticals, 0, singleVerticals.lastIndex)
+                        }
+                        else singleVerticals.add(user)
                     }
                 }
                 RecyclerView.adapter = VerticalAdapter(singleVerticals,this@NewMessageActivity)
@@ -81,7 +86,8 @@ class NewMessageActivity : AppCompatActivity() {
 
         override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
             //holder.image.setImageResource(data[position].image)
-            holder.name.text = data[position].username
+            if(FirebaseAuth.getInstance().uid == data[position].uid) holder.name.text = "나"
+            else holder.name.text = data[position].username
             holder.email.text = data[position].userEmail
         }
 
