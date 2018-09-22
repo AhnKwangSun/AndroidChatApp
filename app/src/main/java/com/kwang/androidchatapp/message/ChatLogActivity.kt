@@ -3,6 +3,7 @@ package com.kwang.androidchatapp.message
 import android.content.Context
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.support.v4.widget.SwipeRefreshLayout
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.util.Log
@@ -11,21 +12,21 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.ChildEventListener
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.*
 import com.kwang.androidchatapp.R
 import com.kwang.androidchatapp.classes.ChatMessageLog
 import com.kwang.androidchatapp.classes.User
 import kotlinx.android.synthetic.main.activity_chat_log.*
 import java.util.ArrayList
+import java.util.concurrent.atomic.AtomicInteger
 
 class ChatLogActivity : AppCompatActivity() {
 
 
     val message = ArrayList<ChatMessageLog>()
     var toUser: User? = null
+
+    var TOTAL_ITEMS_TO_LOAD:Int = 10;
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,6 +43,10 @@ class ChatLogActivity : AppCompatActivity() {
             if(chat_log_editext.text.toString() == "") return@setOnClickListener
             else performSendMessage()
         }
+
+            mRefresh.setOnRefreshListener {
+                listenForMessagees()
+            }
     }
 
     private fun listenForMessagees() {
@@ -49,7 +54,9 @@ class ChatLogActivity : AppCompatActivity() {
         val toId = toUser?.uid
         val ref = FirebaseDatabase.getInstance().getReference("/user-messages/$fromId/$toId")
 
-        ref.addChildEventListener(object : ChildEventListener {
+        var messageQuery = ref.limitToLast(TOTAL_ITEMS_TO_LOAD)
+
+        messageQuery.addChildEventListener(object : ChildEventListener {
             override fun onCancelled(p0: DatabaseError) {
 
             }
@@ -68,6 +75,7 @@ class ChatLogActivity : AppCompatActivity() {
                 val layoutManager = LinearLayoutManager(applicationContext, LinearLayoutManager.VERTICAL, false)
 
 
+
                 if(chatMessage!=null) {
                     Log.d("ChatLog", chatMessage?.text)
                     message.add(chatMessage)
@@ -76,6 +84,7 @@ class ChatLogActivity : AppCompatActivity() {
                 RecyclerView.adapter = VerticalAdapter(message,this@ChatLogActivity)
                 RecyclerView.layoutManager = layoutManager
                 recyclerview_chat_log.scrollToPosition(RecyclerView.adapter.itemCount-1)
+                mRefresh.isRefreshing = false;
             }
 
             override fun onChildRemoved(p0: DataSnapshot) {
